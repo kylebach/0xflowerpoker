@@ -45,7 +45,7 @@ ABI will be output to `./ABI` upon build.
 
 ## Building & Deploying
 
-Requires `./secrets.ts` file
+Requires `./secrets.ts` file. Deploying will require chaning contract to your own Chainlink information. See https://docs.chain.link/docs/chainlink-vrf/example-contracts/ for more information.
 
 ```
 export default {
