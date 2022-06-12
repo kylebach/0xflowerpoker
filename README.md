@@ -3,6 +3,7 @@
 A Smart contract implentation of the game https://runelive.fandom.com/wiki/Flower_Poker using chainlink verifiable random functions. This ensures provably fair flower-pokering, powered by the blockchain!
 
 ## ABI For UI
+ABI will be output to `./ABI` upon build.
 
 ```
   function createMatch(uint256) payable returns (uint256)
