@@ -55,7 +55,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         MatchState state;
     }
 
-    uint256 matchCount = 0;
+    uint256 public matchCount = 0;
     mapping(uint256 => Match) public matches;
     mapping(uint256 => uint256) private requestIdToMatchMap;
 
