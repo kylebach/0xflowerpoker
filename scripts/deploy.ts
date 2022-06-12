@@ -2,12 +2,12 @@
 import {ethers} from 'hardhat';
 
 async function main() {
-  const Bet = await ethers.getContractFactory('Bet');
-  const bet = await Bet.deploy(false);
+  const fpFactory = await ethers.getContractFactory('FlowerPoker');
+  const fp = await fpFactory.deploy();
 
-  await bet.deployed();
+  await fp.deployed();
 
-  console.log('Greeter deployed to:', bet.address);
+  console.log('Flower Poker contract deployed to:', fp.address);
 }
 
 
