@@ -1,15 +1,69 @@
-# Basic Sample Hardhat Project
+# Flower Poker Contract
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
+A Smart contract implentation of the game https://runelive.fandom.com/wiki/Flower_Poker using chainlink verifiable random functions. This ensures provably fair flower-pokering, powered by the blockchain!
 
-Try running some of the following tasks:
+## ABI For UI
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-node scripts/sample-script.js
-npx hardhat help
 ```
+  function createMatch(uint256) payable returns (uint256)
+```
+- Creates a new flower poker offer, with value equal to the deposit amount
+- Emits event `offerPosted(matchId, amount)` 
+
+```
+    function createHouseMatch(uint256) payable returns (uint256)
+```
+- Creates a new flower poker offer against the house, with value equal to the deposit amount
+- Calls chainlink VRF, awaits callback to determin winner and payout
+- Emits event `FlowersPlanted(chainlinkVRFRequestId, matchId)` 
+
+```
+  function acceptMatch(uint256) payable
+```
+- Accepts an existing offer that is in the 'READY' state, must depost value equal to offer sum
+- Calls chaillink VRF, awaits callback to determin winner and payout
+- Emits event `FlowersPlanted(chainlinkVRFRequestId, matchId)` 
+
+```
+  function matches(uint256) view returns (uint256, uint256, address, address, uint8, uint8, uint8)
+```
+- Returns an match at a specific index
+```
+   struct Match {
+        uint256 id;
+        uint256 sum;
+        address player1;
+        address player2;
+        uint8[5] player1draws;
+        uint8[5] player2draws;
+        MatchResult player1Result;
+        MatchResult player2Result;
+        MatchState state;
+    }
+```
+
+## Building & Deploying
+
+Requires `./secrets.ts` file
+
+```
+export default {
+  rpc: 'https://polygon-rpc.com',
+  account: 'ETH / POLYGON PRIVATE KEY',
+};
+```
+
+Deployment to test network:
+```shell
+npx hardhat node &
+npx hardhat run scripts/deploy.ts --network hardhat
+```
+
+Deployment to ploygon network:
+```shell
+npx hardhat run scripts/deploy.ts --network polygon
+```
+
+The ABI will be output to `./ABI`,
+typescript types output to `./typechain-types`
+
