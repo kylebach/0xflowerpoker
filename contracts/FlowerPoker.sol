@@ -36,7 +36,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
 
     enum MatchState {
         READY,
-        CANCLED,
+        CANCELED,
         PLANTED,
         PLAYER_ONE,
         PLAYER_TWO,
@@ -69,7 +69,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         MatchState state
     );
 
-    function cancalMatch(uint256 matchId) public {
+    function cancelMatch(uint256 matchId) public {
         require(matchCount > matchId, "Offer not made");
         require(matches[matchId].player1 == msg.sender, "Offer not owned");
         require(matches[matchId].state == MatchState.READY, "Offer not ready");
