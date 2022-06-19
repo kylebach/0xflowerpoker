@@ -10,7 +10,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         0x6e099d640cde6de9d40ac749b4b594126b0169747122711109c9985d47751f93;
     address private constant CHAINLINK_COORD =
         0xAE975071Be8F8eE67addBC1A82488F1C24858067;
-    uint32 private constant CHAINLINK_GAS_LIMIT = 150000;
+    uint32 private constant CHAINLINK_GAS_LIMIT = 400000;
     uint16 private constant CHAINLINK_REQUESTS = 3;
     uint32 private constant CHAINLINK_NUM_WORDS = 10;
 
@@ -42,17 +42,6 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         TIE_BOTH
     }
 
-    enum FlowerColor {
-        RED,
-        BLUE,
-        YELLOW,
-        ORANGE,
-        PASTEL,
-        RAINBOW,
-        BLACK,
-        WHITE
-    }
-
     struct Match {
         uint256 id;
         uint256 sum;
@@ -61,7 +50,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         MatchResult player1Result;
         MatchResult player2Result;
         MatchState state;
-        bytes10 flowers;
+        uint256 flowers;
         // internal only, won't be serialized
         uint8[5] player1draws;
         uint8[5] player2draws;
@@ -79,7 +68,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         uint256 indexed matchId,
         address winner,
         MatchState state,
-        bytes10
+        uint256 flowers
     );
 
     function acceptMatch(uint256 matchId) public payable {
@@ -188,7 +177,7 @@ contract FlowerPoker is VRFConsumerBaseV2 {
             );
         }
         matches[matchId].state = state;
-        matches[matchId].flowers = matchIdFlowerColorToChar(matchId);
+        pick(matchId);
         emit FlowersPicked(
             requestId,
             matchId,
@@ -257,39 +246,13 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         }
     }
 
-    function FlowerColorToChar(FlowerColor fc)
-        internal
-        pure
-        returns (bytes1 out)
-    {
-        if (fc == FlowerColor.RED) return "r";
-        if (fc == FlowerColor.BLUE) return "b";
-        if (fc == FlowerColor.YELLOW) return "y";
-        if (fc == FlowerColor.ORANGE) return "o";
-        if (fc == FlowerColor.PASTEL) return "p";
-        if (fc == FlowerColor.RAINBOW) return "a";
-        if (fc == FlowerColor.BLACK) return "n";
-        if (fc == FlowerColor.WHITE) return "w";
-    }
-
-    function matchIdFlowerColorToChar(uint256 matchId)
-        internal
-        view
-        returns (bytes10 outs)
-    {
-        bytes1[10] memory out;
+    function pick(uint256 matchId) internal view returns (uint256 flowers) {
+        flowers = 0;
         for (uint8 i = 0; i < 5; i++) {
-            out[i] = FlowerColorToChar(
-                FlowerColor(matches[matchId].player1draws[i])
-            );
-        }
-        for (uint8 i = 0; i < 5; i++) {
-            out[i + 5] = FlowerColorToChar(
-                FlowerColor(matches[matchId].player1draws[i])
-            );
-        }
-        assembly {
-            outs := mload(add(out, 10))
+            flowers = flowers * 10;
+            flowers += matches[matchId].player1draws[i];
+            flowers = flowers * 10;
+            flowers += matches[matchId].player2draws[i];
         }
     }
 
