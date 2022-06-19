@@ -7,7 +7,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 contract FlowerPoker is VRFConsumerBaseV2 {
     uint64 private constant CHAINLINK_SUB_ID = 56;
     bytes32 private constant CHAINLINK_KEY_HASH =
-        0x6e099d640cde6de9d40ac749b4b594126b0169747122711109c9985d47751f93;
+        0xcc294a196eeeb44da2888d17c0625cc88d70d9760a69d58d853ba6581a9ab0cd;
     address private constant CHAINLINK_COORD =
         0xAE975071Be8F8eE67addBC1A82488F1C24858067;
     uint32 private constant CHAINLINK_GAS_LIMIT = 400000;
@@ -64,10 +64,10 @@ contract FlowerPoker is VRFConsumerBaseV2 {
     event offerCancled(uint256 indexed matchId);
     event FlowersPlanted(uint256 indexed requestId, uint256 indexed matchId);
     event FlowersPicked(
-        uint256 indexed requestId,
+        uint256 requestId,
         uint256 indexed matchId,
-        address winner,
-        MatchState state,
+        address indexed winner,
+        MatchState indexed state,
         uint256 flowers
     );
 
@@ -107,9 +107,9 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         matchId = matchCount++;
         matches[matchId] = Match(
             matchId,
-            (sum * 200) / 104,
-            address(this),
+            sum + sum,
             msg.sender,
+            address(this),
             MatchResult.WAIT,
             MatchResult.WAIT,
             MatchState.PLANTED,
@@ -151,9 +151,18 @@ contract FlowerPoker is VRFConsumerBaseV2 {
         override
     {
         uint256 matchId = requestIdToMatchMap[requestId];
-        for (uint16 i = 0; i < 5; i++) {
+        uint256 flowers = 0;
+        for (uint8 i = 0; i < 5; i++) {
             matches[matchId].player1draws[i] = uint8(randomWords[i] % 6);
             matches[matchId].player2draws[i] = uint8(randomWords[i + 5] % 6);
+        }
+        for (uint8 i = 0; i < 5; i++) {
+            flowers *= 10;
+            flowers += (randomWords[i] % 6) + 1;
+        }
+        for (uint8 i = 0; i < 5; i++) {
+            flowers *= 10;
+            flowers += (randomWords[i + 5] % 6) + 1;
         }
         matches[matchId].player1Result = evaluateHand(matchId, true);
         matches[matchId].player2Result = evaluateHand(matchId, false);
@@ -161,30 +170,28 @@ contract FlowerPoker is VRFConsumerBaseV2 {
             matches[matchId].player1Result,
             matches[matchId].player2Result
         );
-        address payable winner = payable(address(this));
-        if (state == MatchState.PLAYER_ONE) {
-            winner = payable(matches[matchId].player1);
-            winner.transfer(matches[matchId].sum);
-        } else if (state == MatchState.PLAYER_TWO) {
-            winner = payable(matches[matchId].player2);
-            winner.transfer(matches[matchId].sum);
-        } else {
+        address payable winner = payable(0x0);
+        if (state == MatchState.TIE_BOTH) {
             payable(matches[matchId].player1).transfer(
                 matches[matchId].sum / 2
             );
-            payable(matches[matchId].player2).transfer(
-                matches[matchId].sum / 2
-            );
+            if (matches[matchId].player2 != address(this)) {
+                payable(matches[matchId].player2).transfer(
+                    matches[matchId].sum / 2
+                );
+            }
+        } else {
+            winner = (state == MatchState.PLAYER_ONE)
+                ? payable(matches[matchId].player1)
+                : payable(matches[matchId].player2);
+            if (winner != address(this)) {
+                winner.transfer(matches[matchId].sum);
+            }
         }
+
         matches[matchId].state = state;
-        pick(matchId);
-        emit FlowersPicked(
-            requestId,
-            matchId,
-            winner,
-            matches[matchId].state,
-            matches[matchId].flowers
-        );
+        matches[matchId].flowers = flowers;
+        emit FlowersPicked(requestId, matchId, winner, state, flowers);
     }
 
     function evaluateHand(uint256 matchId, bool player1)
@@ -243,16 +250,6 @@ contract FlowerPoker is VRFConsumerBaseV2 {
             return MatchState.TIE_BOTH;
         } else {
             return MatchState.PLAYER_TWO;
-        }
-    }
-
-    function pick(uint256 matchId) internal view returns (uint256 flowers) {
-        flowers = 0;
-        for (uint8 i = 0; i < 5; i++) {
-            flowers = flowers * 10;
-            flowers += matches[matchId].player1draws[i];
-            flowers = flowers * 10;
-            flowers += matches[matchId].player2draws[i];
         }
     }
 
