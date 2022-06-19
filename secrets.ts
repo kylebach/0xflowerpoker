@@ -1,4 +1,6 @@
+require('dotenv').config();
+
 export default {
-  rpc: '',
-  account: '',
+  rpc: process.env.RPC || 'https://polygon-rpc.com',
+  account: process.env.ACCOUNT || '',
 };
